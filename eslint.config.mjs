@@ -26,7 +26,7 @@ export default [
             "linebreak-style": ["error", "unix"],
             "quotes": ["error", "double"],
             "semi": ["error", "never"],
-            "no-console": "error",
+            "no-console": "warn",
             "eqeqeq": "error",
             "space-before-function-paren": ["error", "never"],
             "object-curly-spacing": ["error", "always"],
