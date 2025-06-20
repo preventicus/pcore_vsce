@@ -1,0 +1,11 @@
+
+.DS_Store
+
+.idea/
+
+.vscode/
+.vscode-test/
+
+node_modules/
+Dist/
+Out/
