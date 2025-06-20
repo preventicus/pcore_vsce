@@ -1,1 +1,1 @@
-const x =   1+5;
+const x = 1 + 5
