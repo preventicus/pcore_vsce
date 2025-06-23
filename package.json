@@ -9,13 +9,84 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:pcoreEditor.openPcoreFile",
+    "onCommand:pcoreEditor.doSomethingWithOpenFile",
+    "onCommand:pcoreEditor.contextOpenPcore",
+    "onCustomEditor:pcoreEditor.editor",
+    "workspaceContains:**/*.pcore",
+    "onView:pcoreExplorer"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "preventicus.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "pcoreEditor.openPcoreFile",
+        "title": "Open PCore File"
+      },
+      {
+        "command": "pcoreEditor.doSomethingWithOpenFile",
+        "title": "Do Something with PCore File",
+        "icon": "$(heart)"
+      },
+      {
+        "command": "pcoreEditor.contextOpenPcore",
+        "title": "Open with PCore Editor (Context Menu)"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "pcoreEditor.editor",
+        "displayName": "PCore Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.pcore"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "pcoreEditor.contextOpenPcore",
+          "group": "navigation",
+          "when": "resourceExtname == .pcore"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "pcoreEditor.doSomethingWithOpenFile",
+          "group": "navigation",
+          "when": "resourceExtname == .pcore"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pcore-view-container",
+          "title": "PCore Explorer",
+          "icon": "$(heart)"
+        }
+      ]
+    },
+    "views": {
+      "pcore-view-container": [
+        {
+          "id": "pcoreExplorer",
+          "name": "PCore Files"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "pcoreExplorer",
+        "contents": "Willkommen im PCore Editor!\n\n[Öffne eine PCore-Datei](command:pcoreEditor.openPcoreFile)\n\n[Mehr über PCore](command:pcoreEditor.showWelcomeWebview)"
       }
     ]
   },

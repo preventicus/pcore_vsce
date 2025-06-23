@@ -44,6 +44,7 @@ export default [
             "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 1, "maxBOF": 0 }],
             "no-empty": ["error", { "allowEmptyCatch": false }],
             "padded-blocks": ["error", "never"],
+            "@typescript-eslint/no-unused-vars": [ "error", {"argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_"}]
         },
     },
     {

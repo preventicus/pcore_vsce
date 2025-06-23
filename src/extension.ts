@@ -1,26 +1,41 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode"
+import { PCoreEditorProvider } from "./PCoreEditorProvider"
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
+  context.subscriptions.push(
+    vscode.window.registerCustomEditorProvider(
+      "pcoreEditor.editor",
+      new PCoreEditorProvider(context),
+      { supportsMultipleEditorsPerDocument: false }
+    )
+  )
 
-  console.log("Congratulations, your extension \"preventicus\" is now active!")
+  // Register welcome view button command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("pcoreEditor.openPcoreFile", async() => {
+      const files = await vscode.window.showOpenDialog({
+        filters: { "PCore Files": ["pcore"] },
+        canSelectMany: false
+      })
+      if (files && files[0]) {
+        vscode.commands.executeCommand("vscode.openWith", files[0], "pcoreEditor.editor")
+      }
+    })
+  )
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  const disposable = vscode.commands.registerCommand("preventicus.helloWorld", () => {
-    // The code you place here will be executed every time your command is executed
-    // Display a message box to the user
-    vscode.window.showInformationMessage("Hello World from pcoreViewer!")
-  })
+  // Register editor toolbar button command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("pcoreEditor.doSomethingWithOpenFile", () => {
+      vscode.window.showInformationMessage("Action on pcore file executed.")
+    })
+  )
 
-  context.subscriptions.push(disposable)
+  // Register file context menu command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("pcoreEditor.contextOpenPcore", (uri: vscode.Uri) => {
+      vscode.commands.executeCommand("vscode.openWith", uri, "pcoreEditor.editor")
+    })
+  )
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
