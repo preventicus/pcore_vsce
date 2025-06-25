@@ -1,4 +1,6 @@
 import * as vscode from "vscode"
+import { Converter } from "@preventicus/pcore/"
+import { DataForm } from "@preventicus/pcore/"
 
 export class PCoreEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = "pcoreViewer.editor"
@@ -11,8 +13,9 @@ export class PCoreEditorProvider implements vscode.CustomTextEditorProvider {
     _token: vscode.CancellationToken
   ): Promise<void> {
     // Convert binary to JSON text
-    const jsonContent = await parsePCoreToJson() //document.getText()
-
+    //const fileContentBuffer = await vscode.workspace.fs.readFile(document.uri)
+    //const jsonContent = Converter.convertToJson(fileContentBuffer, DataForm.Decompressed)
+    const jsonContent = ""
     // Setup editor
     webviewPanel.webview.options = {
       enableScripts: true
@@ -58,10 +61,7 @@ export class PCoreEditorProvider implements vscode.CustomTextEditorProvider {
   }
 }
 
-async function parsePCoreToJson(): Promise<string> {
-  // TODO: Binary parsing (dummy example)
-  return JSON.stringify({ hello: "pcore" }, null, 2)
-}
+
 
 async function serializeJsonToPCore(): Promise<string> {
   // TODO: Serialize to binary string (dummy example)
