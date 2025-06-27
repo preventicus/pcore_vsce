@@ -14,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("pcoreEditor.openPcoreFile", async() => {
       const files = await vscode.window.showOpenDialog({
-        filters: { "pcore files": ["pcore"] },
+        filters: { "pcore files": ["pcore", "json"] },
         canSelectMany: false
       })
       if (files && files[0]) {

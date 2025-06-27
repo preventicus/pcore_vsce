@@ -51,7 +51,7 @@
         {
           "command": "pcoreEditor.contextOpenPcore",
           "group": "navigation",
-          "when": "resourceExtname == .pcore"
+          "when": "resourceExtname == .pcore || resourceExtname == .json"
         }
       ],
       "editor/title": [
@@ -83,7 +83,7 @@
     "viewsWelcome": [
       {
         "view": "pcoreExplorer",
-        "contents": "Get started with the pcore editor!\n\n[Open a pcore file](command:pcoreEditor.openPcoreFile)\n\n[More about pcore](command:pcoreEditor.showWelcomeWebview)"
+        "contents": "Get started with the pcore editor!\n\n[Open a pcore or pcore json file](command:pcoreEditor.openPcoreFile)\n\n[More about pcore](command:pcoreEditor.showWelcomeWebview)"
       }
     ]
   },
