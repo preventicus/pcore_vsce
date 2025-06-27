@@ -40,7 +40,7 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
   }
 
   async saveCustomDocument(document: PCoreDocument): Promise<void> {
-    const ext = document.extention
+    const ext = document.extension
     if (ext === ".json") {
       await this.saveAsJson(document)
     }
@@ -77,7 +77,7 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
   }
 
   async backupCustomDocument(document: PCoreDocument, documentcontext: vscode.CustomDocumentBackupContext): Promise<vscode.CustomDocumentBackup> {
-    this.saveAsJson(document, documentcontext.destination)
+    await this.saveAsJson(document, documentcontext.destination)
     return {
       id: documentcontext.destination.toString(),
       delete: async() => { await vscode.workspace.fs.delete(documentcontext.destination) }

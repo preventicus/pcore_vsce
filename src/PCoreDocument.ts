@@ -83,7 +83,7 @@ export class PCoreDocument implements vscode.CustomDocument {
     this._uri = uri
   }
 
-  get extention(): string {
+  get extension(): string {
     return this.uri.path.slice(this.uri.path.lastIndexOf(".")).toLowerCase()
   }
   dispose(): void {}

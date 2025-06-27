@@ -39,9 +39,8 @@
         "viewType": "pcoreEditor.editor",
         "displayName": "pcore editor",
         "selector": [
-          {
-            "filenamePattern": "*.pcore"
-          }
+          { "filenamePattern": "*.pcore" },
+          { "filenamePattern": "*.pcore.json" }
         ],
         "priority": "default"
       }
@@ -58,7 +57,7 @@
         {
           "command": "pcoreEditor.doSomethingWithOpenFile",
           "group": "navigation",
-          "when": "resourceExtname == .pcore"
+          "when": "resourceExtname == .pcore || resourceExtname == .json"
         }
       ]
     },
