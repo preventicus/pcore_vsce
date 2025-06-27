@@ -21,27 +21,23 @@
   "contributes": {
     "commands": [
       {
-        "command": "preventicus.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "pcoreEditor.openPcoreFile",
-        "title": "Open PCore File"
+        "title": "Open pcore file"
       },
       {
         "command": "pcoreEditor.doSomethingWithOpenFile",
-        "title": "Do Something with PCore File",
+        "title": "Do something with pcore file",
         "icon": "$(arrow-swap)"
       },
       {
         "command": "pcoreEditor.contextOpenPcore",
-        "title": "Open with PCore Editor (Context Menu)"
+        "title": "Open with pcore editor"
       }
     ],
     "customEditors": [
       {
         "viewType": "pcoreEditor.editor",
-        "displayName": "PCore Editor",
+        "displayName": "pcore editor",
         "selector": [
           {
             "filenamePattern": "*.pcore"
@@ -70,7 +66,7 @@
       "activitybar": [
         {
           "id": "pcore-view-container",
-          "title": "PCore Explorer",
+          "title": "pcore editor",
           "icon": "$(heart)"
         }
       ]
@@ -79,14 +75,15 @@
       "pcore-view-container": [
         {
           "id": "pcoreExplorer",
-          "name": "PCore Files"
+          "name": "pcore files",
+          "icon": "$(heart)"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "pcoreExplorer",
-        "contents": "Willkommen im PCore Editor!\n\n[Öffne eine PCore-Datei](command:pcoreEditor.openPcoreFile)\n\n[Mehr über PCore](command:pcoreEditor.showWelcomeWebview)"
+        "contents": "Get started with the pcore editor!\n\n[Open a pcore file](command:pcoreEditor.openPcoreFile)\n\n[More about pcore](command:pcoreEditor.showWelcomeWebview)"
       }
     ]
   },
@@ -121,8 +118,9 @@
     "typescript-eslint": "^8.34.1"
   },
   "dependencies": {
+    "@preventicus/pcore": "git+https://github.com/preventicus/pcore_ts.git#FOR-888",
     "glob": "^11.0.3",
-    "rimraf": "^6.0.1",
-    "@preventicus/pcore": "git+https://github.com/preventicus/pcore_ts.git#FOR-888_4"
+    "monaco-editor": "^0.52.2",
+    "rimraf": "^6.0.1"
   }
 }
