@@ -5,6 +5,7 @@ import { PCoreDocument } from "./PCoreDocument"
 export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDocument> {
   public static readonly viewType = "pcoreEditor.editor"
   private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<PCoreDocument>>()
+  // private currentWebviewPanel: vscode.WebviewPanel
 
   readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event
 
@@ -20,6 +21,8 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
   }
 
   async resolveCustomEditor(document: PCoreDocument, webviewPanel: vscode.WebviewPanel, _: vscode.CancellationToken): Promise<void> {
+    //this.currentWebviewPanel = webviewPanel
+
     webviewPanel.webview.options = {
       enableScripts: true
     }
@@ -77,23 +80,27 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
   }
 
   async backupCustomDocument(document: PCoreDocument, documentcontext: vscode.CustomDocumentBackupContext): Promise<vscode.CustomDocumentBackup> {
-    await this.saveAsJson(document, documentcontext.destination)
+    await this.saveAsJson(document, documentcontext.destination, true)
     return {
       id: documentcontext.destination.toString(),
       delete: async() => { await vscode.workspace.fs.delete(documentcontext.destination) }
     }
   }
 
-  private async saveAsJson(document: PCoreDocument, uri: vscode.Uri = document.uri): Promise<void> {
+  private async saveAsJson(document: PCoreDocument, uri: vscode.Uri = document.uri, isBackup: boolean = false): Promise<void> {
     try {
       const encoded = new TextEncoder().encode(document.json)
       await vscode.workspace.fs.writeFile(uri, encoded)
-      if (document.uri !== uri) {
+      if (document.uri !== uri && !isBackup) {
         document.uri = uri
       }
-      vscode.window.showInformationMessage("File was saved successfully as JSON.")
+      if (!isBackup) {
+        vscode.window.showInformationMessage("File was saved successfully as JSON.")
+      }
     } catch (error) {
-      vscode.window.showErrorMessage(`JSON not valide: ${error}`)
+      if (!isBackup) {
+        vscode.window.showErrorMessage(`JSON not valide: ${error}`)
+      }
       throw error
     }
   }
