@@ -2,10 +2,11 @@ import * as vscode from "vscode"
 import { PCoreEditorProvider } from "./PCoreEditorProvider"
 
 export function activate(context: vscode.ExtensionContext) {
+  const provider = new PCoreEditorProvider(context)
+
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(
-      "pcoreEditor.editor",
-      new PCoreEditorProvider(context),
+      "pcoreEditor.editor", provider,
       { supportsMultipleEditorsPerDocument: false }
     )
   )
@@ -26,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Register editor toolbar button command
   context.subscriptions.push(
     vscode.commands.registerCommand("pcoreEditor.doSomethingWithOpenFile", () => {
-      vscode.window.showInformationMessage("Action on pcore file executed.")
+      provider.toggleCompressionView()
     })
   )
 

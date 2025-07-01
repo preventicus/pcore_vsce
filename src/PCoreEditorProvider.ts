@@ -5,7 +5,9 @@ import { PCoreDocument } from "./PCoreDocument"
 export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDocument> {
   public static readonly viewType = "pcoreEditor.editor"
   private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<PCoreDocument>>()
-  // private currentWebviewPanel: vscode.WebviewPanel
+  private webviewPanel?: vscode.WebviewPanel
+  private currentDocument?: PCoreDocument
+  private currentForm: DataForm = DataForm.Decompressed
 
   readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event
 
@@ -21,25 +23,42 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
   }
 
   async resolveCustomEditor(document: PCoreDocument, webviewPanel: vscode.WebviewPanel, _: vscode.CancellationToken): Promise<void> {
-    //this.currentWebviewPanel = webviewPanel
+    this.webviewPanel = webviewPanel
+    this.currentDocument = document
+    this.setHtml(document.json)
 
-    webviewPanel.webview.options = {
-      enableScripts: true
-    }
+    webviewPanel.webview.options = { enableScripts: true }
 
-    webviewPanel.webview.html = this.getHtml(document.json)
-
-    webviewPanel.webview.onDidReceiveMessage(async message => {
+    webviewPanel.webview.onDidReceiveMessage(message => {
       if (message.type === "update") {
         document.json = message.text
         this._onDidChangeCustomDocument.fire({
           document,
           undo: () => {},
           redo: () => {},
-          label: "pcore content updated"
+          label: "JSON updated"
         })
       }
     })
+  }
+
+  toggleCompressionView(): void {
+    if (!this.webviewPanel) {
+      vscode.window.showErrorMessage("No webview available to toggle view.")
+      return
+    }
+
+    const document = this.currentDocument as PCoreDocument
+    const dataPb = document.dataPb
+    if (!dataPb) {
+      vscode.window.showErrorMessage("No valid DataPb loaded.")
+      return
+    }
+
+    this.currentForm = this.currentForm === DataForm.Compressed ? DataForm.Decompressed : DataForm.Compressed
+    const json = Converter.convertToJson(dataPb, this.currentForm, 2)
+    document.json = json
+    this.setHtml(json)
   }
 
   async saveCustomDocument(document: PCoreDocument): Promise<void> {
@@ -120,9 +139,9 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
     }
   }
 
-  private getHtml(json: string): string {
+  private setHtml(json: string) {
     const escapedJson = json.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    return `
+    this.webviewPanel!.webview.html = `
       <html>
       <head>
         <style>
