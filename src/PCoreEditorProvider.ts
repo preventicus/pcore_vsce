@@ -49,25 +49,6 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
     })
   }
 
-  toggleCompressionView(): void {
-    if (!this.webviewPanel) {
-      vscode.window.showErrorMessage("No webview available to toggle view.")
-      return
-    }
-
-    const document = this.currentDocument as PCoreDocument
-    const dataPb = document.dataPb
-    if (!dataPb) {
-      vscode.window.showErrorMessage("No valid DataPb loaded.")
-      return
-    }
-
-    this.currentForm = this.currentForm === DataForm.Compressed ? DataForm.Decompressed : DataForm.Compressed
-    const json = Converter.convertToJson(dataPb, this.currentForm, 2)
-    document.json = json
-    this.setHtml(json)
-  }
-
   async saveCustomDocument(document: PCoreDocument): Promise<void> {
     const ext = document.extension
     if (ext === ".json") {
@@ -113,6 +94,25 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
       id: documentcontext.destination.toString(),
       delete: async() => { await vscode.workspace.fs.delete(documentcontext.destination) }
     }
+  }
+
+  toggleCompressionView(): void {
+    if (!this.webviewPanel) {
+      vscode.window.showErrorMessage("No webview available to toggle view.")
+      return
+    }
+
+    const document = this.currentDocument as PCoreDocument
+    const dataPb = document.dataPb
+    if (!dataPb) {
+      vscode.window.showErrorMessage("No valid DataPb loaded.")
+      return
+    }
+
+    this.currentForm = this.currentForm === DataForm.Compressed ? DataForm.Decompressed : DataForm.Compressed
+    const json = Converter.convertToJson(dataPb, this.currentForm, 2)
+    document.json = json
+    this.setHtml(json)
   }
 
   private async saveAsJson(document: PCoreDocument, uri: vscode.Uri = document.uri, isBackup: boolean = false): Promise<void> {
@@ -279,11 +279,24 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
                 document.getElementById('meanSampleRate').textContent = '';
                 return;
               }
-              document.getElementById('firstTimestamp').textContent = \`First Unix Timestamp [ms]: \${data.firstTimeStamp}\`;
-              document.getElementById('lastTimestamp').textContent = \`Last Unix Timestamp [ms]: \${data.lastTimeStamp}\`;
-              document.getElementById('numberOfElements').textContent = \`Elements: \${data.numberOfElements}\`;
-              document.getElementById('numberOfSections').textContent = \`Sections: \${data.numberOfSections}\`;
-              document.getElementById('meanSampleRate').textContent = \`Mean Sample Rate [HZ]: \${data.meanSampleRate} Hz\`;
+
+              const formatDateTime = (unixMs) => {
+                const date = new Date(unixMs);
+                const pad = n => n.toString().padStart(2, '0');
+                return \`\${date.getFullYear()}-\${pad(date.getMonth() + 1)}-\${pad(date.getDate())} \`
+                    + \`\${pad(date.getHours())}:\${pad(date.getMinutes())}:\${pad(date.getSeconds())}\`;
+              };
+
+              document.getElementById('firstTimestamp').textContent =
+                \`First Timestamp: \${formatDateTime(data.firstTimeStamp)} (\${data.firstTimeStamp} ms)\`;
+              document.getElementById('lastTimestamp').textContent =
+                \`Last Timestamp: \${formatDateTime(data.lastTimeStamp)} (\${data.lastTimeStamp} ms)\`;
+              document.getElementById('numberOfElements').textContent =
+                \`Elements: \${data.numberOfElements}\`;
+              document.getElementById('numberOfSections').textContent =
+                \`Sections: \${data.numberOfSections}\`;
+              document.getElementById('meanSampleRate').textContent =
+                \`Mean Sample Rate: \${data.meanSampleRate} Hz\`;
             }
           });
         </script>
