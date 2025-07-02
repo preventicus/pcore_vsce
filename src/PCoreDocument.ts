@@ -3,13 +3,11 @@ import * as vscode from "vscode"
 
 export class PCoreDocument implements vscode.CustomDocument {
   private _uri: vscode.Uri
-  private _dataPb?: DataPb // todo ggf entfernen, wird nicht wirklich genutzt
   private _json: string = ""
   static allowedExtensions = [".pcore", ".json"]
 
-  private constructor(uri: vscode.Uri, dataPb?: DataPb) {
+  private constructor(uri: vscode.Uri) {
     this._uri = uri
-    this._dataPb = dataPb
   }
 
   static async create(uri: vscode.Uri, backupUri?: vscode.Uri): Promise<PCoreDocument> {
@@ -22,13 +20,11 @@ export class PCoreDocument implements vscode.CustomDocument {
       throw new Error(`Failed to open a ${ext} file. Only pcore and json are allowed.`)
     }
 
-    let dataPb: DataPb | undefined
     let json = ""
 
     if (ext === ".json") {
       try {
         json = new TextDecoder().decode(binary)
-        dataPb = Converter.convertFromJson(json)
       } catch {
         // nothing special should happen here. dataPb is undefined und json is presended as is.
         // This could happen if the backup json is not a valid pcore json i.e. VSC crashes in the
@@ -40,14 +36,14 @@ export class PCoreDocument implements vscode.CustomDocument {
 
     if (ext === ".pcore") {
       try {
-        dataPb = DataPb.fromBinary(binary)
+        const dataPb = DataPb.fromBinary(binary)
         json = Converter.convertToJson(dataPb, DataForm.Decompressed, 2)
       } catch (error) {
         throw new Error(`Failed to open the pcore file. File seems to be broken. ${error}`)
       }
     }
 
-    const document = new PCoreDocument(uri, dataPb)
+    const document = new PCoreDocument(uri)
     document.json = json
     return document
   }
@@ -57,22 +53,15 @@ export class PCoreDocument implements vscode.CustomDocument {
   }
 
   set json(json: string) {
-    if (this.dataPb === undefined) {
-      try {
-        this.dataPb = Converter.convertFromJson(json)
-      } catch {
-        // nothing spezial should happen. Just try to deliver a valid pcore json
-      }
-    }
     this._json = json
   }
 
   get dataPb(): DataPb | undefined {
-    return this._dataPb
-  }
-
-  set dataPb(dataPb: DataPb) {
-    this._dataPb = dataPb
+    try {
+      return Converter.convertFromJson(this.json)
+    } catch {
+      return undefined
+    }
   }
 
   get uri(): vscode.Uri {

@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { Converter, DataForm, DataPb } from "@preventicus/pcore/"
 import { PCoreDocument } from "./PCoreDocument"
+import { Inspector } from "@preventicus/pcore"
 
 export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDocument> {
   public static readonly viewType = "pcoreEditor.editor"
@@ -32,12 +33,18 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
     webviewPanel.webview.onDidReceiveMessage(message => {
       if (message.type === "update") {
         document.json = message.text
+        this.sendInspectorDataToWebview(document.dataPb)
         this._onDidChangeCustomDocument.fire({
           document,
           undo: () => {},
           redo: () => {},
           label: "JSON updated"
         })
+      }
+      else if (message.type === "editorWebviewReady") {
+        if (this.currentDocument?.dataPb) {
+          this.sendInspectorDataToWebview(this.currentDocument.dataPb)
+        }
       }
     })
   }
@@ -90,8 +97,10 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
   async revertCustomDocument(document: PCoreDocument): Promise<void> {
     try {
       const binary = await vscode.workspace.fs.readFile(document.uri)
-      document.dataPb = DataPb.fromBinary(binary)
-      document.json = Converter.convertToJson(document.dataPb, DataForm.Decompressed, 2)
+      const dataPb = DataPb.fromBinary(binary)
+      document.json = Converter.convertToJson(dataPb, DataForm.Decompressed, 2)
+      this.setHtml(document.json)
+      this.sendInspectorDataToWebview(document.dataPb)
       vscode.window.showInformationMessage("Changes reverted to file content.")
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to revert document: ${error}`)
@@ -139,39 +148,143 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
     }
   }
 
+  private sendInspectorDataToWebview(dataPb?: DataPb) {
+    if (!this.webviewPanel) {
+      return
+    }
+
+    if (dataPb === undefined) {
+      this.webviewPanel.webview.postMessage({
+        command: "updateInspectorData",
+        data: null
+      })
+      return
+    }
+
+    const firstTimeStamp = Inspector.getFirstUnixTimestamp(dataPb)
+    const lastTimeStamp = Inspector.getLastUnixTimestamp(dataPb)
+    const numberOfElements = Inspector.getNumberOfElements(dataPb)
+    const numberOfSections = Inspector.getNumberOfSections(dataPb)
+
+    let meanSampleRate = 0
+    const timeDiffMs = lastTimeStamp - firstTimeStamp
+    if (timeDiffMs > 0) {
+      meanSampleRate = numberOfElements / (timeDiffMs / 1000)
+    }
+
+    this.webviewPanel.webview.postMessage({ command: "updateInspectorData", data: {
+      firstTimeStamp: firstTimeStamp,
+      lastTimeStamp: lastTimeStamp,
+      numberOfElements: numberOfElements,
+      numberOfSections: numberOfSections,
+      meanSampleRate: meanSampleRate.toFixed(2)
+    } })
+  }
+
   private setHtml(json: string) {
     const escapedJson = json.replace(/</g, "&lt;").replace(/>/g, "&gt;")
     this.webviewPanel!.webview.html = `
       <html>
       <head>
         <style>
-          html, body, #container {
+          html, body, #editor-container {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
+            overflow: hidden;
+          }
+
+          .monaco-editor .my-overlay-widget {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background-color: var(--vscode-editorGroupHeader-tabsBackground);
+            color: var(--vscode-foreground);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-family: sans-serif;
+            font-size: 13px;
+            border-bottom: 1px solid var(--vscode-editorGroup-border);
+            z-index: 10;
+          }
+
+          .monaco-editor .my-overlay-widget span {
+              margin-right: 15px;
+              white-space: nowrap;
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
       </head>
       <body>
-        <div id="container"></div>
+        <div id="editor-container"></div>
+
         <script>
           const vscode = acquireVsCodeApi();
+          let editor;
+          let infoWidget;
 
           require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
           require(['vs/editor/editor.main'], function() {
-            const editor = monaco.editor.create(document.getElementById('container'), {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
               value: \`${escapedJson}\`,
               language: 'json',
-              theme: 'vs-dark',
-              automaticLayout: true
+              theme: 'vs-dark', // oder 'vs', 'hc-black'
+              automaticLayout: true,
+              padding: { top: 30 }
             });
+
+            const widgetDomNode = document.createElement('div');
+            widgetDomNode.className = 'my-overlay-widget';
+            widgetDomNode.innerHTML = \`
+                <span id="firstTimestamp">First TS: N/A</span>
+                <span id="lastTimestamp">Last TS: N/A</span>
+                <span id="numberOfElements">Elements: N/A</span>
+                <span id="numberOfSections">Sections: N/A</span>
+                <span id="meanSampleRate">Sample Rate: N/A Hz</span>
+            \`;
+
+            infoWidget = {
+              getId: function() { return 'my.pcore.inspector.widget'; },
+              getDomNode: function() { return widgetDomNode; },
+              getPosition: function() {
+                return {
+                  preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+                };
+              }
+            };
+
+            editor.addOverlayWidget(infoWidget);
 
             editor.onDidChangeModelContent(() => {
               const text = editor.getValue();
               vscode.postMessage({ type: 'update', text });
             });
+
+            vscode.postMessage({ type: 'editorWebviewReady' });
+          });
+
+          window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'updateInspectorData') {
+              const data = message.data;
+              if (!data) {
+                document.getElementById('firstTimestamp').textContent = 'Not a valid PCore file';
+                document.getElementById('lastTimestamp').textContent = '';
+                document.getElementById('numberOfElements').textContent = '';
+                document.getElementById('numberOfSections').textContent = '';
+                document.getElementById('meanSampleRate').textContent = '';
+                return;
+              }
+              document.getElementById('firstTimestamp').textContent = \`First Unix Timestamp [ms]: \${data.firstTimeStamp}\`;
+              document.getElementById('lastTimestamp').textContent = \`Last Unix Timestamp [ms]: \${data.lastTimeStamp}\`;
+              document.getElementById('numberOfElements').textContent = \`Elements: \${data.numberOfElements}\`;
+              document.getElementById('numberOfSections').textContent = \`Sections: \${data.numberOfSections}\`;
+              document.getElementById('meanSampleRate').textContent = \`Mean Sample Rate [HZ]: \${data.meanSampleRate} Hz\`;
+            }
           });
         </script>
       </body>
