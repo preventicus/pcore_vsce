@@ -15,6 +15,7 @@
     "onCommand:pcoreEditor.contextOpenPcore",
     "onCustomEditor:pcoreEditor.editor",
     "workspaceContains:**/*.pcore",
+    "workspaceContains:**/*.pcore2",
     "onView:pcoreExplorer"
   ],
   "main": "./dist/extension.js",
@@ -40,6 +41,7 @@
         "displayName": "pcore editor",
         "selector": [
           { "filenamePattern": "*.pcore" },
+          { "filenamePattern": "*.pcore2" },
           { "filenamePattern": "*.pcore.json" }
         ],
         "priority": "default"
@@ -50,14 +52,14 @@
         {
           "command": "pcoreEditor.contextOpenPcore",
           "group": "navigation",
-          "when": "resourceExtname == .pcore || resourceExtname == .json"
+          "when": "resourceExtname == .pcore || resourceExtname == .json || resourceExtname == .pcore2"
         }
       ],
       "editor/title": [
         {
           "command": "pcoreEditor.doSomethingWithOpenFile",
           "group": "navigation",
-          "when": "resourceExtname == .pcore || resourceExtname == .json"
+          "when": "resourceExtname == .pcore || resourceExtname == .json || resourceExtname == .pcore2"
         }
       ]
     },

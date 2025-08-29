@@ -4,7 +4,7 @@ import * as vscode from "vscode"
 export class PCoreDocument implements vscode.CustomDocument {
   private _uri: vscode.Uri
   private _json: string = ""
-  static allowedExtensions = [".pcore", ".json"]
+  static allowedExtensions = [".pcore", ".json", ".pcore2"]
 
   private constructor(uri: vscode.Uri) {
     this._uri = uri
@@ -34,7 +34,7 @@ export class PCoreDocument implements vscode.CustomDocument {
       }
     }
 
-    if (ext === ".pcore") {
+    if (ext === ".pcore" || ext === ".pcore2") {
       try {
         const dataPb = DataPb.fromBinary(binary)
         json = Converter.convertToJson(dataPb, DataForm.Decompressed, 2)

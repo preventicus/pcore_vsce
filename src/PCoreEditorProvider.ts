@@ -54,7 +54,7 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
     if (ext === ".json") {
       await this.saveAsJson(document)
     }
-    if (ext === ".pcore") {
+    if (ext === ".pcore" || ext === ".pcore2") {
       await this.saveAsPcore(document)
     }
   }
@@ -70,7 +70,7 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
     if (extTarged === ".json") {
       await this.saveAsJson(document, uri)
     }
-    if (extTarged === ".pcore") {
+    if (extTarged === ".pcore" || extTarged === ".pcore2") {
       await this.saveAsPcore(document, uri)
     }
   }
@@ -127,7 +127,7 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
       }
     } catch (error) {
       if (!isBackup) {
-        vscode.window.showErrorMessage(`JSON not valide: ${error}`)
+        vscode.window.showErrorMessage(`JSON not valid: ${error}`)
       }
       throw error
     }
@@ -215,6 +215,7 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
           .monaco-editor .my-overlay-widget span {
               margin-right: 15px;
               white-space: nowrap;
+              font-size: 11px;
           }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
@@ -283,14 +284,15 @@ export class PCoreEditorProvider implements vscode.CustomEditorProvider<PCoreDoc
               const formatDateTime = (unixMs) => {
                 const date = new Date(unixMs);
                 const pad = n => n.toString().padStart(2, '0');
+                const padMs = ms => ms.toString().padStart(3, '0');
                 return \`\${date.getFullYear()}-\${pad(date.getMonth() + 1)}-\${pad(date.getDate())} \`
-                    + \`\${pad(date.getHours())}:\${pad(date.getMinutes())}:\${pad(date.getSeconds())}\`;
+                    + \`\${pad(date.getHours())}:\${pad(date.getMinutes())}:\${pad(date.getSeconds())}.\${padMs(date.getMilliseconds())}\`;
               };
 
               document.getElementById('firstTimestamp').textContent =
-                \`First Timestamp: \${formatDateTime(data.firstTimeStamp)} (\${data.firstTimeStamp} ms)\`;
+                \`Start Date: \${formatDateTime(data.firstTimeStamp)}\`;
               document.getElementById('lastTimestamp').textContent =
-                \`Last Timestamp: \${formatDateTime(data.lastTimeStamp)} (\${data.lastTimeStamp} ms)\`;
+                \`End Date: \${formatDateTime(data.lastTimeStamp)}\`;
               document.getElementById('numberOfElements').textContent =
                 \`Elements: \${data.numberOfElements}\`;
               document.getElementById('numberOfSections').textContent =
